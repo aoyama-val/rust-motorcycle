@@ -32,9 +32,25 @@ pub struct Game {
     pub requested_sounds: Vec<&'static str>,
     pub player: Player,
     pub ground: [u8; GROUND_LENGTH],
-    pub t: f32,           // 画面左端のワールド座標
-    pub speed: f32,       // スクロールスピード
-    pub speed_scale: f32, // この変数でスピードを調整する
+    pub t: f32,     // 画面左端のワールド座標
+    pub speed: f32, // スクロールスピード
+    pub params: Params,
+}
+
+pub struct Params {
+    pub speed_scale: f32,
+    pub gravity: f32,
+    pub control_rotate_scale: f32,
+}
+
+impl Params {
+    pub fn new() -> Self {
+        Self {
+            speed_scale: 7.0,
+            gravity: 0.1,
+            control_rotate_scale: 0.05,
+        }
+    }
 }
 
 impl Game {
@@ -63,7 +79,7 @@ impl Game {
             ground: [0; GROUND_LENGTH],
             t: 0.0,
             speed: 0.0,
-            speed_scale: 7.0,
+            params: Params::new(),
         };
 
         game.create_stage();
@@ -92,7 +108,7 @@ impl Game {
         if self.speed < 0.0 {
             self.speed = 0.0;
         }
-        self.t += self.speed_scale * self.speed;
+        self.t += self.params.speed_scale * self.speed;
 
         // プレイヤー位置の地面の高さ
         let p1 = self.ground_y(self.player.x);
@@ -104,7 +120,7 @@ impl Game {
         // プレイヤーの足元が地面より上なら
         if self.player.y + PLAYER_HEIGHT < p1 {
             grounded = false;
-            self.player.y_speed += 0.1;
+            self.player.y_speed += self.params.gravity;
         } else {
             grounded = true;
             self.player.y_speed -= self.player.y - (p1 - PLAYER_HEIGHT);
@@ -128,7 +144,7 @@ impl Game {
         }
 
         self.player.r_speed += (command.left - command.right) as f32 * 0.05;
-        self.player.rot -= self.player.r_speed * 0.1;
+        self.player.rot -= self.player.r_speed * self.params.control_rotate_scale;
         self.player.rot = self.player.rot.clamp(-PI, PI);
     }
 
