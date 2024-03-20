@@ -1,4 +1,5 @@
 use rand::prelude::*;
+use std::f32::consts::PI;
 use std::time;
 
 pub const SCREEN_WIDTH: i32 = 600;
@@ -117,6 +118,12 @@ impl Game {
             grounded = true;
             self.player.y_speed -= self.player.y - (p1 - PLAYER_HEIGHT);
             self.player.y = p1 - PLAYER_HEIGHT;
+
+            if self.player.rot.abs() > PI * 0.5 {
+                self.is_over = true;
+                self.requested_sounds.push("crash.wav");
+                return;
+            }
         }
 
         let angle = f32::atan2(p2 - PLAYER_HEIGHT - self.player.y, 5.0);
@@ -131,18 +138,18 @@ impl Game {
         self.player.r_speed += (left_pressed - right_pressed) as f32 * 0.05;
         self.player.rot -= self.player.r_speed * 0.1;
 
-        if self.player.rot > std::f32::consts::PI {
-            self.player.rot = -std::f32::consts::PI;
+        if self.player.rot > PI {
+            self.player.rot = -PI;
         }
-        if self.player.rot < -std::f32::consts::PI {
-            self.player.rot = std::f32::consts::PI;
+        if self.player.rot < -PI {
+            self.player.rot = PI;
         }
     }
 
     pub fn noise(&self, x: f32) -> f32 {
         let x = x * 0.01 % 255.0;
 
-        coslerp(
+        cos_lerp(
             self.ground[x.floor() as usize] as f32,
             self.ground[x.ceil() as usize] as f32,
             x - x.floor(),
@@ -154,10 +161,10 @@ impl Game {
     }
 }
 
-pub fn coslerp(a: f32, b: f32, t: f32) -> f32 {
-    a + (b - a) * (1.0 - f32::cos(t * std::f32::consts::PI)) / 2.0
+pub fn cos_lerp(a: f32, b: f32, t: f32) -> f32 {
+    a + (b - a) * (1.0 - f32::cos(t * PI)) / 2.0
 }
 
 pub fn rad2deg(rad: f32) -> f32 {
-    rad / std::f32::consts::PI * 180.0
+    rad / PI * 180.0
 }

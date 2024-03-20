@@ -209,6 +209,11 @@ fn render(
             .unwrap();
     }
 
+    if game.is_over {
+        canvas.set_draw_color(Color::RGBA(255, 0, 0, 128));
+        canvas.fill_rect(Rect::new(0, 0, SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32))?;
+    }
+
     canvas.present();
 
     Ok(())
