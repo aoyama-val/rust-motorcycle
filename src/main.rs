@@ -171,13 +171,29 @@ fn render(
         .copy_ex(
             &player_image.texture,
             None,
-            Rect::new(game.player.x, game.player.y, PLAYER_SIZE, PLAYER_SIZE),
+            Rect::new(
+                game.player.x as i32,
+                game.player.y as i32,
+                PLAYER_SIZE,
+                PLAYER_SIZE,
+            ),
             game.player.rot as f64, /* SDLのangleは時計回りが正 */
             Point::new(PLAYER_SIZE as i32 / 2, PLAYER_SIZE as i32 / 2),
             false,
             false,
         )
         .unwrap();
+
+    // render ground
+    canvas.set_draw_color(Color::BLACK);
+    for i in 0..SCREEN_WIDTH {
+        canvas
+            .draw_line(
+                Point::new(i as i32, SCREEN_HEIGHT),
+                Point::new(i as i32, SCREEN_HEIGHT - game.ground_y(i) as i32),
+            )
+            .unwrap();
+    }
 
     canvas.present();
 

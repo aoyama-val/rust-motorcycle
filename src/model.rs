@@ -2,6 +2,7 @@ use rand::prelude::*;
 use std::time;
 
 pub const FPS: i32 = 30;
+pub const GROUND_LENGTH: usize = 256;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Command {
@@ -13,8 +14,8 @@ pub enum Command {
 }
 
 pub struct Player {
-    pub x: i32,
-    pub y: i32,
+    pub x: f32,
+    pub y: f32,
     pub rot: f32,
 }
 
@@ -24,6 +25,8 @@ pub struct Game {
     pub is_over: bool,
     pub requested_sounds: Vec<&'static str>,
     pub player: Player,
+    pub ground: [u8; GROUND_LENGTH],
+    pub t: f32,
 }
 
 impl Game {
@@ -43,13 +46,24 @@ impl Game {
             is_over: false,
             requested_sounds: Vec::new(),
             player: Player {
-                x: 0,
-                y: 0,
+                x: 0.0,
+                y: 0.0,
                 rot: 0.0,
             },
+            ground: [0; GROUND_LENGTH],
+            t: 0.0,
         };
 
+        game.create_stage();
+
         game
+    }
+
+    pub fn create_stage(&mut self) {
+        for i in 0..self.ground.len() {
+            self.ground[i] = i as u8;
+        }
+        self.ground.shuffle(&mut self.rng);
     }
 
     pub fn update(&mut self, command: Command) {
@@ -59,6 +73,8 @@ impl Game {
             return;
         }
 
+        self.t += 1.0;
+
         match command {
             Command::None => {}
             Command::Left => todo!(),
@@ -67,4 +83,22 @@ impl Game {
             Command::Down => todo!(),
         }
     }
+
+    pub fn noise(&self, x: f32) -> f32 {
+        let x = x * 0.01 % 255.0;
+
+        coslerp(
+            self.ground[x.floor() as usize] as f32,
+            self.ground[x.ceil() as usize] as f32,
+            x - x.floor(),
+        )
+    }
+
+    pub fn ground_y(&self, i: i32) -> f32 {
+        self.noise(self.t + i as f32) * 0.25
+    }
+}
+
+pub fn coslerp(a: f32, b: f32, t: f32) -> f32 {
+    a + (b - a) * (1.0 - f32::cos(t * std::f32::consts::PI)) / 2.0
 }
