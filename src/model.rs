@@ -5,6 +5,7 @@ pub const SCREEN_WIDTH: i32 = 600;
 pub const SCREEN_HEIGHT: i32 = 400;
 pub const FPS: i32 = 60;
 pub const GROUND_LENGTH: usize = 256;
+pub const PLAYER_WIDTH: f32 = 30.0;
 pub const PLAYER_HEIGHT: f32 = 30.0;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -33,6 +34,7 @@ pub struct Game {
     pub ground: [u8; GROUND_LENGTH],
     pub t: f32,     // 画面左端のワールド座標
     pub speed: f32, // スクロールスピード
+    pub speed_scale: f32,
 }
 
 impl Game {
@@ -52,7 +54,7 @@ impl Game {
             is_over: false,
             requested_sounds: Vec::new(),
             player: Player {
-                x: 0.0,
+                x: SCREEN_WIDTH as f32 / 2.0 - PLAYER_WIDTH / 2.0,
                 y: 0.0,
                 rot: 0.0,
                 y_speed: 0.0,
@@ -61,6 +63,7 @@ impl Game {
             ground: [0; GROUND_LENGTH],
             t: 0.0,
             speed: 0.0,
+            speed_scale: 7.0,
         };
 
         game.create_stage();
@@ -96,7 +99,10 @@ impl Game {
         }
 
         self.speed -= (self.speed - (up_pressed - down_pressed) as f32) * 0.1;
-        self.t += 10.0 * self.speed;
+        if self.speed < 0.0 {
+            self.speed = 0.0;
+        }
+        self.t += self.speed_scale * self.speed;
 
         let p1 = self.ground_y(self.player.x);
         let p2 = self.ground_y(self.player.x + 5.0);
@@ -121,6 +127,9 @@ impl Game {
             self.player.rot -= (self.player.rot - angle) * 0.5;
             self.player.r_speed = self.player.r_speed - (angle - self.player.rot);
         }
+
+        self.player.r_speed += (left_pressed - right_pressed) as f32 * 0.05;
+        self.player.rot -= self.player.r_speed * 0.1;
 
         if self.player.rot > std::f32::consts::PI {
             self.player.rot = -std::f32::consts::PI;
@@ -147,4 +156,8 @@ impl Game {
 
 pub fn coslerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * (1.0 - f32::cos(t * std::f32::consts::PI)) / 2.0
+}
+
+pub fn rad2deg(rad: f32) -> f32 {
+    rad / std::f32::consts::PI * 180.0
 }

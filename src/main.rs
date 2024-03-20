@@ -12,7 +12,6 @@ mod model;
 use crate::model::*;
 
 pub const TITLE: &str = "rust-motorcycle";
-pub const PLAYER_SIZE: u32 = 30;
 
 struct Image<'a> {
     texture: Texture<'a>,
@@ -189,11 +188,11 @@ fn render(
             Rect::new(
                 game.player.x as i32,
                 game.player.y as i32,
-                PLAYER_SIZE,
-                PLAYER_SIZE,
+                PLAYER_WIDTH as u32,
+                PLAYER_HEIGHT as u32,
             ),
-            game.player.rot as f64, /* SDLのangleは時計回りが正 */
-            Point::new(PLAYER_SIZE as i32 / 2, PLAYER_SIZE as i32 / 2),
+            rad2deg(game.player.rot) as f64, /* SDLのangleは時計回りが正で度 */
+            Point::new(PLAYER_WIDTH as i32 / 2, PLAYER_HEIGHT as i32 / 2),
             false,
             false,
         )
