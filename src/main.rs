@@ -67,6 +67,21 @@ pub fn main() -> Result<(), String> {
         let started = SystemTime::now();
 
         let mut command = Command::None;
+
+        let keyboard_state = event_pump.keyboard_state();
+        if keyboard_state.is_scancode_pressed(sdl2::keyboard::Scancode::Left) {
+            command = Command::Left;
+        }
+        if keyboard_state.is_scancode_pressed(sdl2::keyboard::Scancode::Right) {
+            command = Command::Right;
+        }
+        if keyboard_state.is_scancode_pressed(sdl2::keyboard::Scancode::Up) {
+            command = Command::Up;
+        }
+        if keyboard_state.is_scancode_pressed(sdl2::keyboard::Scancode::Down) {
+            command = Command::Down;
+        }
+
         for event in event_pump.poll_iter() {
             match event {
                 Event::Quit { .. } => break 'running,
@@ -79,7 +94,9 @@ pub fn main() -> Result<(), String> {
                     }
                     match code {
                         Keycode::Space => {
-                            game = Game::new();
+                            if game.is_over {
+                                game = Game::new();
+                            }
                         }
                         _ => {}
                     };

@@ -1,7 +1,7 @@
 use rand::prelude::*;
 use std::time;
 
-pub const FPS: i32 = 30;
+pub const FPS: i32 = 60;
 pub const GROUND_LENGTH: usize = 256;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
@@ -27,6 +27,7 @@ pub struct Game {
     pub player: Player,
     pub ground: [u8; GROUND_LENGTH],
     pub t: f32,
+    pub speed: f32,
 }
 
 impl Game {
@@ -52,6 +53,7 @@ impl Game {
             },
             ground: [0; GROUND_LENGTH],
             t: 0.0,
+            speed: 0.0,
         };
 
         game.create_stage();
@@ -73,15 +75,21 @@ impl Game {
             return;
         }
 
-        self.t += 1.0;
+        let mut left_pressed = 0;
+        let mut right_pressed = 0;
+        let mut up_pressed = 0;
+        let mut down_pressed = 0;
 
         match command {
             Command::None => {}
-            Command::Left => todo!(),
-            Command::Right => todo!(),
-            Command::Up => todo!(),
-            Command::Down => todo!(),
+            Command::Left => left_pressed = 1,
+            Command::Right => right_pressed = 1,
+            Command::Up => up_pressed = 1,
+            Command::Down => down_pressed = 1,
         }
+
+        self.speed -= (self.speed - (up_pressed - down_pressed) as f32) * 0.1;
+        self.t += 10.0 * self.speed;
     }
 
     pub fn noise(&self, x: f32) -> f32 {
