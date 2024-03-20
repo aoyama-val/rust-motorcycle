@@ -32,9 +32,9 @@ pub struct Game {
     pub requested_sounds: Vec<&'static str>,
     pub player: Player,
     pub ground: [u8; GROUND_LENGTH],
-    pub t: f32,     // 画面左端のワールド座標
-    pub speed: f32, // スクロールスピード
-    pub speed_scale: f32,
+    pub t: f32,           // 画面左端のワールド座標
+    pub speed: f32,       // スクロールスピード
+    pub speed_scale: f32, // この変数でスピードを調整する
 }
 
 impl Game {
@@ -85,13 +85,18 @@ impl Game {
             return;
         }
 
+        // speed = 0.9 * speed + 0.1 * (up - down) と計算するのと同じ。
+        // speedの初期値が0なので、常に0〜1の範囲におさまる。
+        // self.speed = 0.9 * self.speed + 0.1 * (command.up - command.down) as f32;
         self.speed -= (self.speed - (command.up - command.down) as f32) * 0.1;
         if self.speed < 0.0 {
             self.speed = 0.0;
         }
         self.t += self.speed_scale * self.speed;
 
+        // プレイヤー位置の地面の高さ
         let p1 = self.ground_y(self.player.x);
+        // プレイヤー位置よりちょっと先の地面の高さ
         let p2 = self.ground_y(self.player.x + 5.0);
 
         let grounded: bool;
@@ -112,6 +117,7 @@ impl Game {
             }
         }
 
+        // p1とp2を結ぶ線分の傾き
         let angle = f32::atan2(p2 - PLAYER_HEIGHT - self.player.y, 5.0);
 
         self.player.y += self.player.y_speed;
@@ -147,6 +153,7 @@ impl Game {
     }
 }
 
+// コサインでなめらかにした線形補間
 pub fn cos_lerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * (1.0 - f32::cos(t * PI)) / 2.0
 }
