@@ -12,8 +12,6 @@ mod model;
 use crate::model::*;
 
 pub const TITLE: &str = "rust-motorcycle";
-pub const SCREEN_WIDTH: i32 = 600;
-pub const SCREEN_HEIGHT: i32 = 400;
 pub const PLAYER_SIZE: u32 = 30;
 
 struct Image<'a> {
@@ -207,7 +205,7 @@ fn render(
         canvas
             .draw_line(
                 Point::new(i as i32, SCREEN_HEIGHT),
-                Point::new(i as i32, SCREEN_HEIGHT - game.ground_y(i) as i32),
+                Point::new(i as i32, game.ground_y(i as f32) as i32),
             )
             .unwrap();
     }

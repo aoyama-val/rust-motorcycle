@@ -1,8 +1,11 @@
 use rand::prelude::*;
 use std::time;
 
+pub const SCREEN_WIDTH: i32 = 600;
+pub const SCREEN_HEIGHT: i32 = 400;
 pub const FPS: i32 = 60;
 pub const GROUND_LENGTH: usize = 256;
+pub const PLAYER_HEIGHT: f32 = 30.0;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum Command {
@@ -17,6 +20,8 @@ pub struct Player {
     pub x: f32,
     pub y: f32,
     pub rot: f32,
+    pub y_speed: f32,
+    pub r_speed: f32,
 }
 
 pub struct Game {
@@ -26,8 +31,8 @@ pub struct Game {
     pub requested_sounds: Vec<&'static str>,
     pub player: Player,
     pub ground: [u8; GROUND_LENGTH],
-    pub t: f32,
-    pub speed: f32,
+    pub t: f32,     // 画面左端のワールド座標
+    pub speed: f32, // スクロールスピード
 }
 
 impl Game {
@@ -50,6 +55,8 @@ impl Game {
                 x: 0.0,
                 y: 0.0,
                 rot: 0.0,
+                y_speed: 0.0,
+                r_speed: 0.0,
             },
             ground: [0; GROUND_LENGTH],
             t: 0.0,
@@ -90,6 +97,37 @@ impl Game {
 
         self.speed -= (self.speed - (up_pressed - down_pressed) as f32) * 0.1;
         self.t += 10.0 * self.speed;
+
+        let p1 = self.ground_y(self.player.x);
+        let p2 = self.ground_y(self.player.x + 5.0);
+
+        let grounded: bool;
+
+        // プレイヤーの足元が地面より上なら
+        if self.player.y + PLAYER_HEIGHT < p1 {
+            grounded = false;
+            self.player.y_speed += 0.1;
+        } else {
+            grounded = true;
+            self.player.y_speed -= self.player.y - (p1 - PLAYER_HEIGHT);
+            self.player.y = p1 - PLAYER_HEIGHT;
+        }
+
+        let angle = f32::atan2(p2 - PLAYER_HEIGHT - self.player.y, 5.0);
+
+        self.player.y += self.player.y_speed;
+
+        if grounded {
+            self.player.rot -= (self.player.rot - angle) * 0.5;
+            self.player.r_speed = self.player.r_speed - (angle - self.player.rot);
+        }
+
+        if self.player.rot > std::f32::consts::PI {
+            self.player.rot = -std::f32::consts::PI;
+        }
+        if self.player.rot < -std::f32::consts::PI {
+            self.player.rot = std::f32::consts::PI;
+        }
     }
 
     pub fn noise(&self, x: f32) -> f32 {
@@ -102,8 +140,8 @@ impl Game {
         )
     }
 
-    pub fn ground_y(&self, i: i32) -> f32 {
-        self.noise(self.t + i as f32) * 0.25
+    pub fn ground_y(&self, x: f32) -> f32 {
+        SCREEN_HEIGHT as f32 - self.noise(self.t + x) * 0.25
     }
 }
 
