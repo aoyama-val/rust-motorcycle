@@ -63,20 +63,20 @@ pub fn main() -> Result<(), String> {
     'running: loop {
         let started = SystemTime::now();
 
-        let mut command = Command::None;
+        let mut command = Command::default();
 
         let keyboard_state = event_pump.keyboard_state();
         if keyboard_state.is_scancode_pressed(sdl2::keyboard::Scancode::Left) {
-            command = Command::Left;
+            command.left = 1;
         }
         if keyboard_state.is_scancode_pressed(sdl2::keyboard::Scancode::Right) {
-            command = Command::Right;
+            command.right = 1;
         }
         if keyboard_state.is_scancode_pressed(sdl2::keyboard::Scancode::Up) {
-            command = Command::Up;
+            command.up = 1;
         }
         if keyboard_state.is_scancode_pressed(sdl2::keyboard::Scancode::Down) {
-            command = Command::Down;
+            command.down = 1;
         }
 
         for event in event_pump.poll_iter() {

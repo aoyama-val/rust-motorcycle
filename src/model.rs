@@ -9,13 +9,12 @@ pub const GROUND_LENGTH: usize = 256;
 pub const PLAYER_WIDTH: f32 = 30.0;
 pub const PLAYER_HEIGHT: f32 = 30.0;
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
-pub enum Command {
-    None,
-    Left,
-    Right,
-    Up,
-    Down,
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
+pub struct Command {
+    pub left: i8,
+    pub right: i8,
+    pub up: i8,
+    pub down: i8,
 }
 
 pub struct Player {
@@ -86,20 +85,7 @@ impl Game {
             return;
         }
 
-        let mut left_pressed = 0;
-        let mut right_pressed = 0;
-        let mut up_pressed = 0;
-        let mut down_pressed = 0;
-
-        match command {
-            Command::None => {}
-            Command::Left => left_pressed = 1,
-            Command::Right => right_pressed = 1,
-            Command::Up => up_pressed = 1,
-            Command::Down => down_pressed = 1,
-        }
-
-        self.speed -= (self.speed - (up_pressed - down_pressed) as f32) * 0.1;
+        self.speed -= (self.speed - (command.up - command.down) as f32) * 0.1;
         if self.speed < 0.0 {
             self.speed = 0.0;
         }
@@ -135,7 +121,7 @@ impl Game {
             self.player.r_speed = self.player.r_speed - (angle - self.player.rot);
         }
 
-        self.player.r_speed += (left_pressed - right_pressed) as f32 * 0.05;
+        self.player.r_speed += (command.left - command.right) as f32 * 0.05;
         self.player.rot -= self.player.r_speed * 0.1;
 
         if self.player.rot > PI {
