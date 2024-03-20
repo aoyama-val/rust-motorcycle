@@ -129,13 +129,7 @@ impl Game {
 
         self.player.r_speed += (command.left - command.right) as f32 * 0.05;
         self.player.rot -= self.player.r_speed * 0.1;
-
-        if self.player.rot > PI {
-            self.player.rot = -PI;
-        }
-        if self.player.rot < -PI {
-            self.player.rot = PI;
-        }
+        self.player.rot = self.player.rot.clamp(-PI, PI);
     }
 
     pub fn noise(&self, x: f32) -> f32 {
