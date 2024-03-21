@@ -1,6 +1,6 @@
 # Motorcycle game
 
-[![Youtube Video](https://img.youtube.com/vi/U_XfakBnpEE/0.jpg)](https://youtu.be/U_XfakBnpEE)
+[![Youtube Video](https://img.youtube.com/vi/NCZXKenqU-Y/0.jpg)](https://youtu.be/NCZXKenqU-Y)
 
 ## Requirement
 
