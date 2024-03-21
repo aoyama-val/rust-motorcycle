@@ -119,7 +119,7 @@ impl Game {
 
         self.scroll(command);
         self.move_player(command);
-        self.score = ((self.t / 30.0) as i32) * 10;
+        self.score = (self.t / 30.0) as i32;
     }
 
     pub fn scroll(&mut self, command: Command) {

@@ -237,7 +237,7 @@ fn render(
     render_font(
         canvas,
         &font,
-        format!("{:10}", game.score).to_string(),
+        format!("{:10}m", game.score).to_string(),
         SCREEN_WIDTH,
         0,
         Color::WHITE,
