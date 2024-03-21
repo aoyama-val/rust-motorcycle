@@ -29,6 +29,7 @@ pub struct Game {
     pub rng: StdRng,
     pub frame: i32,
     pub is_over: bool,
+    pub is_playing: bool,
     pub score: i32,
     pub requested_sounds: Vec<&'static str>,
     pub player: Player,
@@ -71,6 +72,7 @@ impl Game {
             rng: rng,
             frame: -1,
             is_over: false,
+            is_playing: true,
             score: 0,
             requested_sounds: Vec::new(),
             player: Player {
@@ -105,8 +107,12 @@ impl Game {
             return;
         }
 
+        self.scroll(command);
+        self.move_player(command);
         self.score = ((self.t / 30.0) as i32) * 10;
+    }
 
+    pub fn scroll(&mut self, command: Command) {
         // speed = 0.9 * speed + 0.1 * (up - down) と計算するのと同じ。
         // speedの初期値が0なので、常に0〜1の範囲におさまる。
         // self.speed = 0.9 * self.speed + 0.1 * (command.up - command.down) as f32;
@@ -123,7 +129,9 @@ impl Game {
             self.speed = self.params.min_speed;
         }
         self.t += self.params.speed_scale * self.speed;
+    }
 
+    pub fn move_player(&mut self, command: Command) {
         // プレイヤー位置の地面の高さ
         let p1 = self.ground_y(self.player.x);
         // プレイヤー位置よりちょっと先の地面の高さ
@@ -141,25 +149,34 @@ impl Game {
             self.player.y = p1 - PLAYER_HEIGHT;
 
             if self.player.rot.abs() > PI * 0.5 {
-                self.is_over = true;
-                self.requested_sounds.push("crash.wav");
-                return;
+                self.is_playing = false;
             }
         }
 
-        // p1とp2を結ぶ線分の角度（プレイヤーの角度）
-        let angle = f32::atan2(p2 - PLAYER_HEIGHT - self.player.y, 5.0);
+        if self.is_playing {
+            // p1とp2を結ぶ線分の角度（プレイヤーの角度）
+            let angle = f32::atan2(p2 - PLAYER_HEIGHT - self.player.y, 5.0);
 
-        self.player.y += self.player.y_speed;
+            self.player.y += self.player.y_speed;
 
-        if grounded {
-            self.player.rot -= (self.player.rot - angle) * 0.5;
-            self.player.r_speed = self.player.r_speed - (angle - self.player.rot);
+            if grounded {
+                self.player.rot -= (self.player.rot - angle) * 0.5;
+                self.player.r_speed = self.player.r_speed - (angle - self.player.rot);
+            }
+
+            self.player.r_speed += (command.left - command.right) as f32 * 0.05;
+            self.player.rot -= self.player.r_speed * self.params.control_rotate_scale;
+        } else {
+            // 転倒したら派手に回転させる
+            self.player.x -= 5.0;
+            self.player.r_speed = 0.15;
+            self.player.rot -= self.player.r_speed;
+            // 画面から消えたらゲームオーバー
+            if self.player.x + PLAYER_WIDTH < 0.0 {
+                self.is_over = true;
+                self.requested_sounds.push("crash.wav");
+            }
         }
-
-        self.player.r_speed += (command.left - command.right) as f32 * 0.05;
-        self.player.rot -= self.player.r_speed * self.params.control_rotate_scale;
-        self.player.rot = self.player.rot.clamp(-PI, PI);
     }
 
     pub fn noise(&self, x: f32) -> f32 {
