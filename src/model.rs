@@ -41,6 +41,7 @@ pub struct Params {
     pub speed_scale: f32,
     pub gravity: f32,
     pub control_rotate_scale: f32,
+    pub min_speed: f32,
 }
 
 impl Params {
@@ -49,6 +50,7 @@ impl Params {
             speed_scale: 7.0,
             gravity: 0.1,
             control_rotate_scale: 0.05,
+            min_speed: 0.5,
         }
     }
 }
@@ -104,9 +106,17 @@ impl Game {
         // speed = 0.9 * speed + 0.1 * (up - down) と計算するのと同じ。
         // speedの初期値が0なので、常に0〜1の範囲におさまる。
         // self.speed = 0.9 * self.speed + 0.1 * (command.up - command.down) as f32;
+        let prev_speed = self.speed;
         self.speed -= (self.speed - (command.up - command.down) as f32) * 0.1;
         if self.speed < 0.0 {
             self.speed = 0.0;
+        }
+        // 摩擦による速度減少では、一定以下にならないようにする
+        if command.down == 0
+            && prev_speed >= self.params.min_speed
+            && self.speed < self.params.min_speed
+        {
+            self.speed = self.params.min_speed;
         }
         self.t += self.params.speed_scale * self.speed;
 
@@ -133,7 +143,7 @@ impl Game {
             }
         }
 
-        // p1とp2を結ぶ線分の傾き
+        // p1とp2を結ぶ線分の角度（プレイヤーの角度）
         let angle = f32::atan2(p2 - PLAYER_HEIGHT - self.player.y, 5.0);
 
         self.player.y += self.player.y_speed;
