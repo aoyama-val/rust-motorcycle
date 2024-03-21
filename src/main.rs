@@ -4,6 +4,7 @@ use sdl2::mixer;
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::{BlendMode, Canvas, Texture, TextureCreator};
+use sdl2::ttf::Sdl2TtfContext;
 use sdl2::video::{Window, WindowContext};
 use std::collections::HashMap;
 use std::fs;
@@ -35,6 +36,7 @@ impl<'a> Image<'a> {
 struct Resources<'a> {
     images: HashMap<String, Image<'a>>,
     chunks: HashMap<String, sdl2::mixer::Chunk>,
+    fonts: HashMap<String, sdl2::ttf::Font<'a, 'a>>,
 }
 
 pub fn main() -> Result<(), String> {
@@ -48,13 +50,17 @@ pub fn main() -> Result<(), String> {
         .build()
         .map_err(|e| e.to_string())?;
 
+    sdl_context.mouse().show_cursor(false);
+
     init_mixer();
+
+    let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
 
     let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
     canvas.set_blend_mode(BlendMode::Blend);
 
     let texture_creator = canvas.texture_creator();
-    let mut resources = load_resources(&texture_creator, &mut canvas);
+    let mut resources = load_resources(&texture_creator, &mut canvas, &ttf_context);
 
     let mut event_pump = sdl_context.event_pump()?;
 
@@ -132,10 +138,12 @@ fn init_mixer() {
 fn load_resources<'a>(
     texture_creator: &'a TextureCreator<WindowContext>,
     #[allow(unused_variables)] canvas: &mut Canvas<Window>,
+    ttf_context: &'a Sdl2TtfContext,
 ) -> Resources<'a> {
     let mut resources = Resources {
         images: HashMap::new(),
         chunks: HashMap::new(),
+        fonts: HashMap::new(),
     };
 
     let entries = fs::read_dir("resources/image").unwrap();
@@ -166,6 +174,14 @@ fn load_resources<'a>(
         }
     }
 
+    load_font(
+        &mut resources,
+        &ttf_context,
+        "./resources/font/boxfont2.ttf",
+        18,
+        "boxfont",
+    );
+
     resources
 }
 
@@ -175,6 +191,7 @@ fn render(
     resources: &mut Resources,
 ) -> Result<(), String> {
     let clear_color = Color::RGB(0x11, 0x99, 0xff);
+    let font = resources.fonts.get_mut("boxfont").unwrap();
 
     canvas.set_draw_color(clear_color);
     canvas.clear();
@@ -214,6 +231,16 @@ fn render(
         canvas.fill_rect(Rect::new(0, 0, SCREEN_WIDTH as u32, SCREEN_HEIGHT as u32))?;
     }
 
+    render_font(
+        canvas,
+        &font,
+        format!("{:10}", game.score).to_string(),
+        SCREEN_WIDTH,
+        0,
+        Color::WHITE,
+        TextPivot::Right,
+    );
+
     canvas.present();
 
     Ok(())
@@ -230,4 +257,52 @@ fn play_sounds(game: &mut Game, resources: &Resources) {
             .expect("cannot play sound");
     }
     game.requested_sounds = Vec::new();
+}
+
+enum TextPivot {
+    Left,   // 左寄せ。xは左端を指定
+    Center, // 中央寄せ。xは中心を指定
+    Right,  // 右寄せ。xは右端を指定
+}
+
+fn render_font(
+    canvas: &mut Canvas<Window>,
+    font: &sdl2::ttf::Font,
+    text: String,
+    x: i32,
+    y: i32,
+    color: Color,
+    align: TextPivot,
+) {
+    let texture_creator = canvas.texture_creator();
+
+    let surface = font.render(&text).blended(color).unwrap();
+    let texture = texture_creator
+        .create_texture_from_surface(&surface)
+        .unwrap();
+    let x: i32 = match align {
+        TextPivot::Left => x,
+        TextPivot::Center => x - texture.query().width as i32 / 2,
+        TextPivot::Right => x - texture.query().width as i32,
+    };
+    canvas
+        .copy(
+            &texture,
+            None,
+            Rect::new(x, y, texture.query().width, texture.query().height),
+        )
+        .unwrap();
+}
+
+fn load_font<'a>(
+    resources: &mut Resources<'a>,
+    ttf_context: &'a Sdl2TtfContext,
+    path_str: &str,
+    point_size: u16,
+    key: &str,
+) {
+    let font = ttf_context
+        .load_font(path_str, point_size)
+        .expect(&format!("cannot load font: {}", path_str));
+    resources.fonts.insert(key.to_string(), font);
 }

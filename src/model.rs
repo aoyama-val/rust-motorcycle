@@ -29,6 +29,7 @@ pub struct Game {
     pub rng: StdRng,
     pub frame: i32,
     pub is_over: bool,
+    pub score: i32,
     pub requested_sounds: Vec<&'static str>,
     pub player: Player,
     pub ground: [u8; GROUND_LENGTH],
@@ -70,6 +71,7 @@ impl Game {
             rng: rng,
             frame: -1,
             is_over: false,
+            score: 0,
             requested_sounds: Vec::new(),
             player: Player {
                 x: SCREEN_WIDTH as f32 / 2.0 - PLAYER_WIDTH / 2.0,
@@ -102,6 +104,8 @@ impl Game {
         if self.is_over {
             return;
         }
+
+        self.score = ((self.t / 30.0) as i32) * 10;
 
         // speed = 0.9 * speed + 0.1 * (up - down) と計算するのと同じ。
         // speedの初期値が0なので、常に0〜1の範囲におさまる。
