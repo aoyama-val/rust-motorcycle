@@ -32,11 +32,13 @@ pub struct Game {
     pub is_playing: bool,
     pub score: i32,
     pub requested_sounds: Vec<&'static str>,
+    pub requested_musics: Vec<&'static str>,
     pub player: Player,
     pub ground: [u8; GROUND_LENGTH],
     pub t: f32,     // 画面左端のワールド座標
     pub speed: f32, // スクロールスピード
     pub params: Params,
+    pub music_started: bool,
 }
 
 pub struct Params {
@@ -75,6 +77,8 @@ impl Game {
             is_playing: true,
             score: 0,
             requested_sounds: Vec::new(),
+            requested_musics: Vec::new(),
+
             player: Player {
                 x: SCREEN_WIDTH as f32 / 2.0 - PLAYER_WIDTH / 2.0,
                 y: 0.0,
@@ -86,6 +90,7 @@ impl Game {
             t: 0.0,
             speed: 0.0,
             params: Params::new(),
+            music_started: false,
         };
 
         game.create_stage();
@@ -105,6 +110,11 @@ impl Game {
 
         if self.is_over {
             return;
+        }
+
+        if command.up == 1 && !self.music_started {
+            self.music_started = true;
+            self.requested_musics.push("play");
         }
 
         self.scroll(command);
@@ -149,7 +159,10 @@ impl Game {
             self.player.y = p1 - PLAYER_HEIGHT;
 
             if self.player.rot.abs() > PI * 0.5 {
-                self.is_playing = false;
+                if self.is_playing {
+                    self.is_playing = false;
+                    self.requested_musics.push("fadeout");
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
-use sdl2::mixer;
+use sdl2::mixer::{self, Music};
 use sdl2::pixels::Color;
 use sdl2::rect::{Point, Rect};
 use sdl2::render::{BlendMode, Canvas, Texture, TextureCreator};
@@ -62,6 +62,8 @@ pub fn main() -> Result<(), String> {
     let texture_creator = canvas.texture_creator();
     let mut resources = load_resources(&texture_creator, &mut canvas, &ttf_context);
 
+    let music = sdl2::mixer::Music::from_file("./resources/sound/bike.ogg")?;
+
     let mut event_pump = sdl_context.event_pump()?;
 
     let mut game = Game::new();
@@ -111,6 +113,7 @@ pub fn main() -> Result<(), String> {
         render(&mut canvas, &game, &mut resources)?;
 
         play_sounds(&mut game, &resources);
+        play_music(&mut game, &music);
 
         let finished = SystemTime::now();
         let elapsed = finished.duration_since(started).unwrap();
@@ -305,4 +308,30 @@ fn load_font<'a>(
         .load_font(path_str, point_size)
         .expect(&format!("cannot load font: {}", path_str));
     resources.fonts.insert(key.to_string(), font);
+}
+
+fn play_music(game: &mut Game, music: &Music) {
+    for music_key in &game.requested_musics {
+        match *music_key {
+            "halt" => {
+                sdl2::mixer::Music::halt();
+            }
+            "pause" => {
+                sdl2::mixer::Music::pause();
+            }
+            "resume" => {
+                sdl2::mixer::Music::resume();
+            }
+            "fadeout" => {
+                sdl2::mixer::Music::fade_out(500);
+            }
+            "play" => {
+                music.play(-1);
+            }
+            _ => {
+                println!("Unknown music: {}", music_key);
+            }
+        }
+    }
+    game.requested_musics = Vec::new();
 }
