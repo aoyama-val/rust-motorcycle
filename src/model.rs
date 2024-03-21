@@ -193,11 +193,11 @@ impl Game {
     }
 
     pub fn noise(&self, x: f32) -> f32 {
-        let x = x * 0.01 % (GROUND_LENGTH as f32);
+        let x = x * 0.01;
 
         cos_lerp(
-            self.ground[x.floor() as usize] as f32,
-            self.ground[x.ceil() as usize] as f32,
+            self.ground[x.floor() as usize % self.ground.len()] as f32,
+            self.ground[x.ceil() as usize % self.ground.len()] as f32,
             x - x.floor(),
         )
     }
